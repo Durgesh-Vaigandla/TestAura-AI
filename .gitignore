@@ -1,0 +1,51 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+*.sqlite
+*.db
+testaura.db
+data/testaura.db
+
+# Uploads & Data
+data/uploads/
+uploads/
+
+# Large AI Models
+models/
+*.gguf
+*.bin
+*.pt
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (if tailwind is rebuilt)
+node_modules/
+package-lock.json
+
+# Logs
+logs/
+*.log
+app/static/tailwindcss

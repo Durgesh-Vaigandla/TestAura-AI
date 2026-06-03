@@ -1,0 +1,12 @@
+Flask
+SQLAlchemy
+Flask-SQLAlchemy
+Jinja2
+Werkzeug
+PyMuPDF
+pdfplumber
+python-docx
+pandas
+openpyxl
+llama-cpp-python
+pytest
