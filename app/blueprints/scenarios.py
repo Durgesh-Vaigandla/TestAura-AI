@@ -10,7 +10,8 @@ def index():
         scenarios = Scenario.query.filter_by(requirement_id=req_id).all()
         req = Requirement.query.get(req_id)
     else:
-        scenarios = Scenario.query.order_by(Scenario.id.desc()).limit(100).all()
+        from app.models.domain import Document
+        scenarios = Scenario.query.join(Requirement).join(Document).filter(Document.filename != '_adhoc_workspace.txt').order_by(Scenario.id.desc()).limit(100).all()
         req = None
         
     return render_template('pages/scenarios.html', scenarios=scenarios, requirement=req)
@@ -35,3 +36,37 @@ def refine_scenario(sc_id):
     db.session.commit()
     
     return jsonify({"status": "success", "refined_text": refined_text})
+
+@scenarios_bp.route('/<int:sc_id>/generate-code', methods=['POST'])
+def generate_code(sc_id):
+    from flask import g
+    from app.services.code_generator import code_generator
+    
+    if not g.current_project:
+        return jsonify({"error": "No project selected."}), 400
+        
+    sc = Scenario.query.get_or_404(sc_id)
+    try:
+        filepath = code_generator.generate_playwright_spec(g.current_project, sc)
+        return jsonify({"status": "success", "filepath": filepath})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@scenarios_bp.route('/<int:sc_id>/run-native', methods=['POST'])
+def run_native(sc_id):
+    from flask import g, request
+    from app.services.local_runner import native_runner
+    
+    if not g.current_project:
+        return jsonify({"error": "No project selected."}), 400
+        
+    filepath = request.json.get('filepath')
+    if not filepath:
+        return jsonify({"error": "Filepath required"}), 400
+        
+    sc = Scenario.query.get_or_404(sc_id)
+    try:
+        exec_id = native_runner.run_spec(g.current_project, sc, filepath)
+        return jsonify({"status": "success", "execution_id": exec_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

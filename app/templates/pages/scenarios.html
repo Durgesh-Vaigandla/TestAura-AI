@@ -70,12 +70,19 @@
                 </div>
                 
                 <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <span class="text-xs text-gray-500">Status: {{ sc.status }}</span>
-                    <button title="Use AI to rewrite this scenario into professional Gherkin phrasing" class="text-xs font-medium text-indigo-600 hover:text-indigo-900"
-                            data-id="{{ sc.id }}"
-                            onclick="refineScenario(this.dataset.id)">
-                        ✨ Refine with AI
-                    </button>
+                    <span class="text-xs text-gray-500">Status: <span id="status-{{ sc.id }}">{{ sc.status }}</span></span>
+                    <div class="space-x-2">
+                        <button title="Use AI to generate Playwright TS code for this scenario" class="text-xs font-medium text-indigo-600 hover:text-indigo-900"
+                                data-id="{{ sc.id }}"
+                                onclick="generateCode(this.dataset.id)">
+                            📝 Generate Code
+                        </button>
+                        <button id="run-btn-{{ sc.id }}" title="Run the generated code natively" class="hidden text-xs font-medium text-green-600 hover:text-green-900"
+                                data-id="{{ sc.id }}"
+                                onclick="runNative(this.dataset.id)">
+                            ▶️ Run Test
+                        </button>
+                    </div>
                 </div>
             </div>
         {% endif %}
@@ -98,6 +105,50 @@ async function refineScenario(id) {
         el.innerHTML = "<strong>AI Refined Gherkin:</strong>\n\n" + data.refined_text;
     } catch (e) {
         el.innerHTML = "Failed to reach AI service.";
+    }
+}
+
+async function generateCode(id) {
+    const statusEl = document.getElementById(`status-${id}`);
+    statusEl.innerText = "Generating Code...";
+    
+    try {
+        const response = await fetch(`/scenarios/${id}/generate-code`, { method: 'POST' });
+        const data = await response.json();
+        if (data.status === 'success') {
+            statusEl.innerText = `Code Generated: ${data.filepath}`;
+            const runBtn = document.getElementById(`run-btn-${id}`);
+            runBtn.classList.remove('hidden');
+            runBtn.dataset.filepath = data.filepath;
+        } else {
+            statusEl.innerText = `Error: ${data.error}`;
+        }
+    } catch (e) {
+        statusEl.innerText = "Failed to generate code.";
+    }
+}
+
+async function runNative(id) {
+    const statusEl = document.getElementById(`status-${id}`);
+    const runBtn = document.getElementById(`run-btn-${id}`);
+    const filepath = runBtn.dataset.filepath;
+    
+    statusEl.innerText = "Running Native Test...";
+    
+    try {
+        const response = await fetch(`/scenarios/${id}/run-native`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filepath })
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+            window.location.href = `/executions/${data.execution_id}`;
+        } else {
+            statusEl.innerText = `Error: ${data.error}`;
+        }
+    } catch (e) {
+        statusEl.innerText = "Failed to run test.";
     }
 }
 </script>

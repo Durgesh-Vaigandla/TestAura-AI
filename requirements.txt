@@ -10,3 +10,4 @@ pandas
 openpyxl
 llama-cpp-python
 pytest
+playwright

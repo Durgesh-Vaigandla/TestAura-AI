@@ -11,7 +11,7 @@ def index():
         reqs = Requirement.query.filter_by(document_id=doc_id).order_by(Requirement.id).all()
         doc = Document.query.get(doc_id)
     else:
-        reqs = Requirement.query.order_by(Requirement.id.desc()).limit(100).all()
+        reqs = Requirement.query.join(Document).filter(Document.filename != '_adhoc_workspace.txt').order_by(Requirement.id.desc()).limit(100).all()
         doc = None
         
     return render_template('pages/requirements.html', requirements=reqs, document=doc)

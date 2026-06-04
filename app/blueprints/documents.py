@@ -11,7 +11,8 @@ def allowed_file(filename):
 
 @documents_bp.route('/', methods=['GET'])
 def index():
-    docs = Document.query.order_by(Document.upload_date.desc()).all()
+    from flask import g
+    docs = Document.query.filter(Document.filename != '_adhoc_workspace.txt', Document.project_id == g.current_project.id).order_by(Document.upload_date.desc()).all()
     return render_template('pages/documents.html', documents=docs)
 
 @documents_bp.route('/upload', methods=['POST'])
@@ -28,7 +29,13 @@ def upload():
         file.save(file_path)
         
         # Save to DB
-        doc = Document(filename=filename, original_name=file.filename, file_path=file_path)
+        from flask import g
+        doc = Document(
+            filename=filename,
+            original_name=file.filename,
+            file_path=file_path,
+            project_id=g.current_project.id
+        )
         db.session.add(doc)
         db.session.commit()
         

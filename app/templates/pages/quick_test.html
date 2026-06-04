@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Prompt to Automation | TestAura AI{% endblock %}
+{% block header %}Prompt-to-Automation{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Generate Instant Automation Script</h3>
+        <p class="text-sm text-gray-500 mb-6">Describe what you want to test in plain English, and the AI will generate and execute the Playwright automation script instantly.</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="target_url" class="block text-sm font-medium text-gray-700">Target URL (Localhost or Public)</label>
+                <input type="text" id="target_url" name="target_url" placeholder="http://localhost:3000/login" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            
+            <div>
+                <label for="prompt" class="block text-sm font-medium text-gray-700">Test Instruction Prompt</label>
+                <textarea id="prompt" name="prompt" rows="4" placeholder="e.g., Log in using dummy credentials username 'admin' and password '1234'. Then click on the profile icon and ensure the logout button is visible." class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button onclick="generateAdHoc()" id="generateBtn" class="inline-flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Generate & Run Test
+                </button>
+                <button onclick="autoDiscover()" id="discoverBtn" class="inline-flex justify-center py-2 px-6 border border-indigo-200 rounded-md shadow-sm text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    Auto-Discover Edge Cases
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loadingState" class="hidden bg-white shadow-sm rounded-lg border border-gray-200 p-8 text-center">
+        <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h4 id="loadingText" class="text-md font-medium text-gray-900">AI is analyzing your prompt...</h4>
+        <p class="text-sm text-gray-500 mt-1">Generating deterministic execution intents.</p>
+    </div>
+    
+</div>
+
+<script>
+    function generateAdHoc() {
+        const targetUrl = document.getElementById('target_url').value;
+        const promptText = document.getElementById('prompt').value;
+        
+        if (!targetUrl || !promptText) {
+            alert('Please enter both a URL and a prompt instruction.');
+            return;
+        }
+        
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('generateBtn').disabled = true;
+        
+        // Phase 1: Generate Scenarios
+        fetch('/quick-test/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('generateBtn').disabled = false;
+                return;
+            }
+            
+            document.getElementById('loadingText').innerText = "Launching Playwright Engine...";
+            
+            // Phase 2: Instantly Execute them
+            return fetch('/execution/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_url: targetUrl,
+                    mode: 'Debug', // Use debug so user sees the browser pop open
+                    scenario_ids: data.scenario_ids
+                })
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.execution_id) {
+                // Redirect straight to the execution lab to watch the live logs!
+                window.location.href = "/execution";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('An error occurred during generation.');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('generateBtn').disabled = false;
+        });
+    }
+
+    function autoDiscover() {
+        const targetUrl = document.getElementById('target_url').value;
+        
+        if (!targetUrl) {
+            alert('Please enter a target URL for auto-discovery.');
+            return;
+        }
+        
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('generateBtn').disabled = true;
+        document.getElementById('discoverBtn').disabled = true;
+        document.getElementById('loadingText').innerText = "Scouting URL & Auto-Discovering Tests...";
+        
+        fetch('/quick-test/discover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_url: targetUrl })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('generateBtn').disabled = false;
+                document.getElementById('discoverBtn').disabled = false;
+                return;
+            }
+            
+            document.getElementById('loadingText').innerText = "Launching Playwright Engine...";
+            
+            return fetch('/execution/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    target_url: targetUrl,
+                    mode: 'Debug',
+                    scenario_ids: data.scenario_ids
+                })
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.execution_id) {
+                window.location.href = "/execution";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('An error occurred during discovery.');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('discoverBtn').disabled = false;
+        });
+    }
+</script>
+{% endblock %}

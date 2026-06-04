@@ -8,7 +8,7 @@ import io
 @coverage_bp.route('/', methods=['GET'])
 def index():
     doc_id = request.args.get('doc_id')
-    docs = Document.query.all()
+    docs = Document.query.filter(Document.filename != '_adhoc_workspace.txt').all()
     
     metrics = None
     selected_doc = None

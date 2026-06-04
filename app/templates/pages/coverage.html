@@ -126,6 +126,45 @@
                 </tbody>
             </table>
         </div>
+    <!-- Automation Execution Coverage -->
+    <div class="lg:col-span-3 bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden mt-6">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <h3 class="text-md font-semibold text-gray-900">Automation Execution Matrix</h3>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Phase 1 Execution Stats</span>
+        </div>
+        <div class="overflow-y-auto max-h-[300px]">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-white sticky top-0">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Req ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requirement Title</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Automated Scenarios</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Last Execution</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pass Rate</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for req_stat in metrics.requirement_stats %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">{{ req_stat.req_id }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 truncate max-w-xs" title="{{ req_stat.title }}">{{ req_stat.title }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">{{ req_stat.scenario_count }} Scripts Ready</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="text-xs text-gray-400">{{ req_stat.last_exec_time }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center">
+                                <span class="text-xs font-medium mr-2 {% if req_stat.pass_rate >= 80 %}text-green-600{% elif req_stat.pass_rate > 0 %}text-yellow-600{% else %}text-gray-500{% endif %}">{{ req_stat.pass_rate }}%</span>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 w-16">
+                                    <div class="{% if req_stat.pass_rate >= 80 %}bg-green-500{% elif req_stat.pass_rate > 0 %}bg-yellow-500{% else %}bg-gray-400{% endif %} h-1.5 rounded-full" style="width: {{ req_stat.pass_rate }}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

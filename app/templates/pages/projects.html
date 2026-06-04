@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Projects - TestAura AI{% endblock %}
+
+{% block content %}
+<div class="px-8 py-6 max-w-5xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Project Contexts</h1>
+        <p class="mt-2 text-sm text-gray-500">Isolate your requirements and configure global AI context rules for different applications.</p>
+    </div>
+
+    <!-- Create Project Form -->
+    <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Create New Project</h3>
+            <form action="/projects" method="POST" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Project Name</label>
+                        <input type="text" name="name" id="name" required class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <input type="text" name="description" id="description" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+                
+                <h4 class="text-md leading-6 font-medium text-gray-800 mt-6 mb-2">Execution Settings</h4>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="target_directory" class="block text-sm font-medium text-gray-700">Target Directory (Absolute Path)</label>
+                        <input type="text" name="target_directory" id="target_directory" placeholder="/Users/username/Developer/MyProject" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label for="test_folder" class="block text-sm font-medium text-gray-700">Test Folder Name</label>
+                        <input type="text" name="test_folder" id="test_folder" value="testaura_e2e" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label for="test_command" class="block text-sm font-medium text-gray-700">Test Command</label>
+                        <input type="text" name="test_command" id="test_command" value="npx playwright test --reporter=json" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <label for="global_context" class="block text-sm font-medium text-gray-700">Global AI Context Rules</label>
+                    <p class="text-xs text-gray-500 mb-2">Define strict rules for the AI (e.g., "College Admins must click 'Admin & Faculty' tab first. Valid student ID is 12345.")</p>
+                    <textarea name="global_context" id="global_context" rows="4" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Project List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+            {% for proj in projects %}
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium text-indigo-600 truncate">{{ proj.name }}</p>
+                        <div class="ml-2 flex-shrink-0 flex">
+                            {% if g.current_project and g.current_project.id == proj.id %}
+                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Active Project
+                            </p>
+                            {% else %}
+                            <a href="/switch-project/{{ proj.id }}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 hover:bg-indigo-100 hover:text-indigo-800">
+                                Switch to Project
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mt-2 sm:flex sm:justify-between">
+                        <div class="sm:flex">
+                            <p class="flex items-center text-sm text-gray-500">
+                                {{ proj.description or "No description" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-xs text-gray-500">
+                        <div><span class="font-semibold text-gray-700">Target Dir:</span> {{ proj.target_directory or "Not Set" }}</div>
+                        <div><span class="font-semibold text-gray-700">Test Folder:</span> {{ proj.test_folder }}</div>
+                        <div><span class="font-semibold text-gray-700">Command:</span> <code class="bg-gray-100 px-1 py-0.5 rounded">{{ proj.test_command }}</code></div>
+                    </div>
+
+                    {% if proj.global_context %}
+                    <div class="mt-4 bg-slate-50 p-3 rounded text-xs text-gray-700 border border-slate-200">
+                        <span class="font-semibold text-slate-900 block mb-1">Global AI Rules:</span>
+                        {{ proj.global_context }}
+                    </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

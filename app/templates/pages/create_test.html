@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Create Test - TestAura AI{% endblock %}
+
+{% block content %}
+<div class="px-8 py-6 max-w-5xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Create New Test</h1>
+        <p class="mt-2 text-sm text-gray-500">Choose how you want to generate new testing scenarios.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 1. AI Quick Test -->
+        <div class="bg-white shadow rounded-lg p-6 border border-slate-200">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">From Prompt (AI)</h3>
+            <p class="text-sm text-gray-500 mb-4">Just type what you want to test and the AI will generate the scenario and Playwright code.</p>
+            <form action="/quick-test/run" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Target URL</label>
+                    <input type="text" name="url" placeholder="http://localhost:3000" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Prompt</label>
+                    <textarea name="prompt" rows="3" placeholder="e.g. Login with dummy credentials" class="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    Generate & Run
+                </button>
+            </form>
+            
+            <form action="/quick-test/discover" method="POST" class="mt-4 border-t pt-4 border-gray-200">
+                <p class="text-xs text-gray-500 mb-2">Or let AI auto-discover tests from a URL:</p>
+                <div class="flex space-x-2">
+                    <input type="text" name="url" placeholder="URL" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    <button type="submit" class="inline-flex justify-center py-2 px-3 border border-transparent shadow-sm text-xs font-medium rounded-md text-white bg-slate-600 hover:bg-slate-700">
+                        Discover
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. From Document -->
+        <div class="bg-white shadow rounded-lg p-6 border border-slate-200">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">From Document</h3>
+            <p class="text-sm text-gray-500 mb-4">Generate BDD scenarios directly from your uploaded requirement documents.</p>
+            {% if documents %}
+                <form action="/generator/generate-scenarios" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700">Select Document</label>
+                        <select name="document_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            {% for doc in documents %}
+                            <option value="{{ doc.id }}">{{ doc.original_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        Extract Scenarios
+                    </button>
+                </form>
+            {% else %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-700">
+                    No documents uploaded in this project yet. <a href="/documents" class="underline font-medium">Upload one first.</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. Manual Entry -->
+        <div class="bg-white shadow rounded-lg p-6 border border-slate-200">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Manual Generator</h3>
+            <p class="text-sm text-gray-500 mb-4">Paste a single requirement and use AI to generate structured BDD steps.</p>
+            <a href="/generator" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                Open Manual Generator
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
